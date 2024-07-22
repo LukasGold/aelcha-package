@@ -4,7 +4,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from common import LimitOptions
+from common import LimitOption
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import medfilt, savgol_filter
 from typing_extensions import List, Sequence, Tuple, Union
@@ -306,8 +306,8 @@ def plot_cycle_wise_single_scale(
     comments: List[str],
     x_title: str,
     y_title: str,
-    x_limits: Union[LimitOptions, Tuple[float, float]],
-    y_limits: Union[LimitOptions, Tuple[float, float]],
+    x_limits: Union[LimitOption, Tuple[float, float]],
+    y_limits: Union[LimitOption, Tuple[float, float]],
     cap_unit: str,
     active_material_mass_unit: str,
 ):
@@ -433,9 +433,9 @@ def plot_cycle_wise_dual_scale(
     x_title: str,
     y1_title: str,
     y2_title: str,
-    x_limits: Union[LimitOptions, Tuple[float, float]],
-    y1_limits: Union[LimitOptions, Tuple[float, float]],
-    y2_limits: Union[LimitOptions, Tuple[float, float]],
+    x_limits: Union[LimitOption, Tuple[float, float]],
+    y1_limits: Union[LimitOption, Tuple[float, float]],
+    y2_limits: Union[LimitOption, Tuple[float, float]],
     cap_unit: str,
     active_material_mass: str,
 ):

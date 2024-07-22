@@ -9,14 +9,14 @@ from common import (
     CapacityLimit,
     ChargeIncrement,
     ChargePerVoltageLimit,
-    CyclesToPlotOptions,
-    DigatronPreprocessingOptions,
-    FilterSelectionOptions,
-    LimitOptions,
-    MaccorPreprocessingOptions,
+    CyclesToPlotOption,
+    DigatronPreprocessingOption,
+    FilterSelectionOption,
+    LimitOption,
+    MaccorPreprocessingOption,
     Mass,
     Sample,
-    SeparatorOptions,
+    SeparatorOption,
     VoltageIncrement,
     VoltageLimit,
     get_model_field_default_value,
@@ -33,7 +33,7 @@ class PandasVersion:
 
 
 class AnalysisParam(BaseModel):
-    cycles_to_plot: Union[CyclesToPlotOptions, List[int], str]
+    cycles_to_plot: Union[CyclesToPlotOption, List[int], str]
     """List of cycle numbers to be plotted. Default: all cycles."""
     export_graphs: bool
     """Whether to export the graphs."""
@@ -53,7 +53,7 @@ class AnalysisParam(BaseModel):
     dv_min_increment: Union[float, VoltageIncrement]
     """dVmin / mV - minimum step size between two considered voltage samples. Higher
     value increases SNR but decreases resolution. Default: 2, max: 10"""
-    dq_dv_filter_selection: FilterSelectionOptions
+    dq_dv_filter_selection: FilterSelectionOption
     """Choose filter to be used for smoothing of dQ/dV result:
         0 = none, 1 = Savitzky Golay, 2 = Gaussian,
         3 = median filter, 4 = adjacent average"""
@@ -79,12 +79,12 @@ class Configuration(BaseModel):
     export_dir_default: Optional[Union[str, Path]] = None
     """Default export directory."""
     input_source_type: Optional[
-        Union[MaccorPreprocessingOptions, DigatronPreprocessingOptions]
-    ] = MaccorPreprocessingOptions.mims_export
+        Union[MaccorPreprocessingOption, DigatronPreprocessingOption]
+    ] = MaccorPreprocessingOption.mims_export
     """Input source type."""
-    decimal_separator: SeparatorOptions = SeparatorOptions.comma
+    decimal_separator: SeparatorOption = SeparatorOption.comma
     """Decimal separator in the input files."""
-    thousands_separator: SeparatorOptions = SeparatorOptions.dot
+    thousands_separator: SeparatorOption = SeparatorOption.dot
     """Thousands separator in the input files."""
     colormap: str = "gist_rainbow"
     """Colormap for plotting. Must be a valid matplotlib colormap. List of available
@@ -111,8 +111,8 @@ class Configuration(BaseModel):
     normalization."""
     three_electrode_cell_default: bool = False
     """Default value for three-electrode cell."""
-    cycles_to_plot_default: Union[CyclesToPlotOptions, List[int]] = (
-        CyclesToPlotOptions.all
+    cycles_to_plot_default: Union[CyclesToPlotOption, List[int]] = (
+        CyclesToPlotOption.all
     )
     """Default value for list of cycle numbers to be plotted. Default: all cycles."""
     plot_cap_ce_vs_cn_default: bool = False
@@ -132,7 +132,7 @@ class Configuration(BaseModel):
     dq_min_increment_default: ChargeIncrement = None
     """Default value for dQmin / mAh - minimum step size between two considered charge
     samples."""
-    dq_dv_filter_selection_default: FilterSelectionOptions = FilterSelectionOptions.none
+    dq_dv_filter_selection_default: FilterSelectionOption = FilterSelectionOption.none
     """Default value for choosing filter to be used for smoothing of dQ/dV result:
         0 = none, 1 = Savitzky Golay, 2 = Gaussian,
         3 = median filter, 4 = adjacent average"""
@@ -145,19 +145,17 @@ class Configuration(BaseModel):
     # Voltage vs. capacity graph
     # Two electrode cells
     # X-axis is capacity
-    v_vs_cap_2el_x_low_lim: Union[float, LimitOptions, CapacityLimit] = (
-        LimitOptions.auto
-    )
+    v_vs_cap_2el_x_low_lim: Union[float, LimitOption, CapacityLimit] = LimitOption.auto
     """Lower limit of the x-axis in the voltage vs. capacity graph for two-electrode
     cells. Any float value will be considered as the capacity limit in mAh."""
-    v_vs_cap_2el_x_up_lim: Union[float, LimitOptions, CapacityLimit] = LimitOptions.auto
+    v_vs_cap_2el_x_up_lim: Union[float, LimitOption, CapacityLimit] = LimitOption.auto
     """Upper limit of the x-axis in the voltage vs. capacity graph for two-electrode
     cells. Any float value will be considered as the capacity limit in mAh."""
     # Y-axis is voltage
-    v_vs_cap_2el_y_low_lim: Union[float, LimitOptions, VoltageLimit] = LimitOptions.auto
+    v_vs_cap_2el_y_low_lim: Union[float, LimitOption, VoltageLimit] = LimitOption.auto
     """Lower limit of the y-axis in the voltage vs. capacity graph for two-electrode
     cells. Any float value will be considered as the voltage limit in V."""
-    v_vs_cap_2el_y_up_lim: Union[float, LimitOptions, VoltageLimit] = LimitOptions.auto
+    v_vs_cap_2el_y_up_lim: Union[float, LimitOption, VoltageLimit] = LimitOption.auto
     """Upper limit of the y-axis in the voltage vs. capacity graph for two-electrode
     cells. Any float value will be considered as the voltage limit in V."""
     # Three electrode cells
@@ -172,26 +170,26 @@ class Configuration(BaseModel):
     # """Upper limit of the x-axis in the voltage vs. capacity graph for three-electrode
     # cells. Any float value will be considered as the capacity limit in mAh."""
     # Y-axis is voltage
-    v_vs_cap_3el_left_y_low_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    v_vs_cap_3el_left_y_low_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Lower limit of the left y-axis in the voltage vs. capacity graph for
     three-electrode cells. Any float value will be considered as the voltage limit in V.
     """
-    v_vs_cap_3el_left_y_up_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    v_vs_cap_3el_left_y_up_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Upper limit of the left y-axis in the voltage vs. capacity graph for
     three-electrode cells. Any float value will be considered as the voltage limit in V.
     """
-    v_vs_cap_3el_right_y_low_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    v_vs_cap_3el_right_y_low_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Lower limit of the right y-axis in the voltage vs. capacity graph for
     three-electrode cells. Any float value will be considered as the voltage limit in V.
     """
-    v_vs_cap_3el_right_y_up_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    v_vs_cap_3el_right_y_up_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Upper limit of the right y-axis in the voltage vs. capacity graph for
     three-electrode cells. Any float value will be considered as the voltage limit in V.
@@ -199,47 +197,43 @@ class Configuration(BaseModel):
     # dQ/dV vs. voltage graph
     # Two electrode cells
     # X-axis is voltage
-    dq_dv_vs_v_2el_x_low_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
-    )
+    dq_dv_vs_v_2el_x_low_lim: Union[float, LimitOption, VoltageLimit] = LimitOption.auto
     """Lower limit of the x-axis in the dQ/dV vs. voltage graph for two-electrode cells.
     Any float value will be considered as the voltage limit in V."""
-    dq_dv_vs_v_2el_x_up_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
-    )
+    dq_dv_vs_v_2el_x_up_lim: Union[float, LimitOption, VoltageLimit] = LimitOption.auto
     """Upper limit of the x-axis in the dQ/dV vs. voltage graph for two-electrode cells.
     Any float value will be considered as the voltage limit in V."""
     # Y-axis is dQ/dV
-    dq_dv_vs_v_2el_y_low_lim: Union[float, LimitOptions, ChargePerVoltageLimit] = (
-        LimitOptions.auto
+    dq_dv_vs_v_2el_y_low_lim: Union[float, LimitOption, ChargePerVoltageLimit] = (
+        LimitOption.auto
     )
     """Lower limit of the y-axis in the dQ/dV vs. voltage graph for two-electrode cells.
     Any float value will be considered as the charge per voltage limit in mAh/V."""
-    dq_dv_vs_v_2el_y_up_lim: Union[float, LimitOptions, ChargePerVoltageLimit] = (
-        LimitOptions.auto
+    dq_dv_vs_v_2el_y_up_lim: Union[float, LimitOption, ChargePerVoltageLimit] = (
+        LimitOption.auto
     )
     """Upper limit of the y-axis in the dQ/dV vs. voltage graph for two-electrode cells.
     Any float value will be considered as the charge per voltage limit in mAh/V."""
     # Three electrode cells
     # X-axis is voltage
-    dq_dv_vs_v_3el_left_x_low_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    dq_dv_vs_v_3el_left_x_low_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Lower limit of the left x-axis in the dQ/dV vs. voltage graph for three-electrode
     cells. Any float value will be considered as the voltage limit in V."""
-    dq_dv_vs_v_3el_left_x_up_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    dq_dv_vs_v_3el_left_x_up_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Upper limit of the left x-axis in the dQ/dV vs. voltage graph for three-electrode
     cells. Any float value will be considered as the voltage limit in V."""
-    dq_dv_vs_v_3el_right_x_low_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    dq_dv_vs_v_3el_right_x_low_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Lower limit of the right x-axis in the dQ/dV vs. voltage graph for
     three-electrode cells. Any float value will be considered as the voltage limit in V.
     """
-    dq_dv_vs_v_3el_right_x_up_lim: Union[float, LimitOptions, VoltageLimit] = (
-        LimitOptions.auto
+    dq_dv_vs_v_3el_right_x_up_lim: Union[float, LimitOption, VoltageLimit] = (
+        LimitOption.auto
     )
     """Upper limit of the right x-axis in the dQ/dV vs. voltage graph for
     three-electrode cells. Any float value will be considered as the voltage limit in V.
@@ -390,9 +384,7 @@ class SelectionRow(BaseModel):
     """Whether the cell is a three-electrode cell."""
     _sample: Sample = PrivateAttr(None)
     """Sample object."""
-    cycles_to_plot: Union[CyclesToPlotOptions, List[int]] = cfg(
-        "cycles_to_plot_default"
-    )
+    cycles_to_plot: Union[CyclesToPlotOption, List[int]] = cfg("cycles_to_plot_default")
     """List of cycle numbers to be plotted. Default: all cycles."""
     export_converted_raw_data: bool = cfg("export_converted_raw_data_default")
     """Whether to export the converted raw data."""
@@ -414,7 +406,7 @@ class SelectionRow(BaseModel):
     value increases SNR but decreases resolution. Default: 2, max: 10"""
     dq_min_increment: Union[float, ChargeIncrement] = cfg("dq_min_increment_default")
     """dQmin / mAh - minimum step size between two considered charge samples."""
-    dq_dv_filter_selection: FilterSelectionOptions = cfg(
+    dq_dv_filter_selection: FilterSelectionOption = cfg(
         "dq_dv_filter_selection_default"
     )
     """Choose filter to be used for smoothing of dQ/dV result:
@@ -641,7 +633,7 @@ def read_file_selection(fp: Union[str, Path]) -> FileSelection:
             # Sample (battery cell) details
             # -----------------------------
             "capacity_default": DataTableSearch(
-                rc="Rated or theoretical capacity / mAh"
+                rc="Rated, nominal or theoretical capacity / mAh"
             ),
             "active_material_mass_default": DataTableSearch(
                 rc="Active material mass / g"

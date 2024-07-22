@@ -14,6 +14,7 @@ class QuantityStatement(BaseModel):
     unit: str
     """Unit of the quantity."""
     property: str
+    """Semantic property of the quantity."""
     _value_str: PrivateAttr(str) = None
     """String representation of the quantity."""
     _uvalue: PrivateAttr(str) = None
@@ -62,7 +63,7 @@ class ChargePerVoltage(QuantityStatement):
     property: str = "Property:HasChargePerVoltage"
 
 
-class LimitOptions(Enum):
+class LimitOption(Enum):
     auto = 0
 
 
@@ -78,7 +79,7 @@ class ChargePerVoltageLimit(ChargePerVoltage):
     property: str = "Property:HasChargePerVoltageLimit"
 
 
-class SeparatorOptions(Enum):
+class SeparatorOption(Enum):
     dot = "."
     """Dot separator."""
     comma = ","
@@ -107,7 +108,7 @@ class SeparatorOptions(Enum):
     """Apostrophe separator."""
 
 
-class MaccorPreprocessingOptions(Enum):
+class MaccorPreprocessingOption(Enum):
     raw_data = -11  # historical
     """Raw data, must be read with the dll."""
     mims_export = 10
@@ -118,7 +119,7 @@ class MaccorPreprocessingOptions(Enum):
     """Maccor export file. Output of the macor export exe v2."""
 
 
-class DigatronPreprocessingOptions(Enum):
+class DigatronPreprocessingOption(Enum):
     # raw_data = -21
     # """Raw data, must be retrieved from the database."""
     digatron_export = 20
@@ -136,7 +137,7 @@ class Sample(BaseModel):
     """Whether the cell is a three-electrode cell."""
 
 
-class FilterSelectionOptions(Enum):
+class FilterSelectionOption(Enum):
     none = 0
     savitzky_golay = 1
     """Savitzky Golay filter"""
@@ -149,7 +150,7 @@ class FilterSelectionOptions(Enum):
 
 
 class FilterParam(BaseModel):
-    filter_selection: FilterSelectionOptions = FilterSelectionOptions.none
+    filter_selection: FilterSelectionOption = FilterSelectionOption.none
     """Choose filter to be used for smoothing of dQ/dV result:
     0 = none, 1 = Savitzky Golay, 2 = Gaussian,
     3 = median filter, 4 = adjacent average"""
@@ -160,13 +161,13 @@ class FilterParam(BaseModel):
     """For Gaussian filter, enter sigma. For Savitzky Golay, enter polynomial order."""
 
 
-class CyclesToPlotOptions(Enum):
+class CyclesToPlotOption(Enum):
     all = "all"
 
 
-def parse_cycles_to_plot(cycles_to_plot: str) -> Union[CyclesToPlotOptions, List[int]]:
+def parse_cycles_to_plot(cycles_to_plot: str) -> Union[CyclesToPlotOption, List[int]]:
     if cycles_to_plot == "all":
-        return CyclesToPlotOptions.all
+        return CyclesToPlotOption.all
     result = []
     if ";" in cycles_to_plot:
         cycles_to_plot = cycles_to_plot.replace(";", ",")
