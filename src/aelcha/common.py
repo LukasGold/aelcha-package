@@ -183,3 +183,6 @@ def parse_cycles_to_plot(cycles_to_plot: str) -> Union[CyclesToPlotOption, List[
 
 def get_model_field_default_value(model: BaseModel, field: str):
     return model.model_fields[field].default
+
+
+# todo: include data model / avoid redundant definitons
