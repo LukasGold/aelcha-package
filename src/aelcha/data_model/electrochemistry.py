@@ -2,7 +2,7 @@ from enum import Enum
 
 from typing_extensions import Dict, List, Optional
 
-from aelcha.data_model.core import DateTime, Metadata
+from aelcha.data_model.core import DataModel, DateTime
 from aelcha.data_model.items import Device, PhysicalItem
 from aelcha.data_model.qaq_data import (
     Quality,
@@ -27,7 +27,7 @@ class BatteryCellFormFactor(Enum):
         return self.value
 
 
-class BatteryCellFormat(Metadata):
+class BatteryCellFormat(DataModel):
     # name will be required!
     description: str
     form_factor: BatteryCellFormFactor

@@ -11,7 +11,7 @@ from typing_extensions import Any, ClassVar, Dict, List, Optional, Union
 from aelcha.data_model.core import (
     TYPE_OPTION,
     ClassMetadata,
-    Metadata,
+    DataModel,
     SemanticProperty,
     SemanticVersioning,
 )
@@ -26,7 +26,7 @@ class UnitPrefix(BaseModel):
     conversion_factor: float
 
 
-class QuantityKindDimensionVector(Metadata):
+class QuantityKindDimensionVector(DataModel):
     """Dimensional exponents of the quantity kind. Defines the relation of a quantity
     to the base quantities of a system of quantities as a product of factors
     corresponding to the base quantities, omitting any numerical factor.
@@ -73,6 +73,9 @@ class QuantityKindDimensionVector(Metadata):
                     else:
                         name = name + f"{symbol}^{sign}{abs_val}"
         super().__init__(name=name, **data)
+
+    def __str__(self):
+        return self.name
 
 
 class UnitPrefixOption(Enum):
@@ -253,11 +256,15 @@ class UnitPrefixOption(Enum):
     )
 
 
-class UnitOfMeasure(Metadata):
+class UnitOfMeasure(DataModel):
     symbol: str
     dimension_vector: Optional[QuantityKindDimensionVector] = None
     non_prefixed_unit: Optional["UnitOfMeasure"] = None
     prefix: Optional[UnitPrefixOption] = None
+    factor: Optional[float] = 1
+    # todo: get factor from prefix
+    # todo: ucum code
+    # todo: derived from (missing here)
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -336,7 +343,7 @@ class Uncertainty(BaseModel):
 
 
 # DRAFT
-class Quality(Metadata):  # todo: discuss if parent should be entity
+class Quality(DataModel):  # todo: discuss if parent should be entity
     """Quality of a thing or concept. Examples:
     Category:Person
     * Gender -> Property
@@ -364,23 +371,27 @@ class Quantity(Quality):
 
 
 class Property(Quality):
+    """Property in a semantic sense. E.g. 'Works for' with range 'Organization'."""
+
+    # todo: discussion - Property is not very specific
     pass
 
 
-class QuantityAnnotation(Metadata):
+class QuantityAnnotation(DataModel):
     """Used to, e.g., describe the content of a column in a tabular data set."""
 
     uncertainty: Optional[Union[float, Uncertainty]] = None
     """Uncertainty of the quantity - Should be a list of plus, minus, upper and lower
     bound (flat and percentage)"""
-    unit: Optional[UnitOfMeasure] = None
+    unit: Optional[UnitOfMeasure] = None  # todo - discussion: unit unit (1) for
+    # "dimensionslose Größe"
     """Unit of the quantity. Will be checked against the selected quantity kinds
     applicable units."""  # todo
     quantity_kind: Optional[Quantity] = None
-    """Kind of quantity."""
+    """Kind of quantity."""  # todo: check if unit is in applicable units
     data_type: TYPE_OPTION
     """Data type used to store values of the quantity annotated by the instance of
-    this class."""
+    this class."""  # todo: necessary? Not required in Python
     semantic_property: Optional[SemanticProperty] = None
     """Semantic property of the quantity."""
 
@@ -428,7 +439,7 @@ class Data(Item):
     """The data contained"""
 
 
-class TabularDataMetadata(Metadata):
+class TabularDataMetadata(DataModel):
     name: str = "TabularDataMetadata"
     columns: Dict[str, Quality]
     """A dict of qualities, with quality = description of the content of a column,
@@ -451,3 +462,5 @@ class TabularData(Data):
 
     class Config:
         arbitrary_types_allowed = True
+
+    # todo: add validator for meta data

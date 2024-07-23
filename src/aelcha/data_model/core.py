@@ -1,4 +1,5 @@
 import datetime
+import re
 import uuid as uuid_module
 from enum import Enum
 from uuid import UUID
@@ -46,6 +47,8 @@ class SemanticProperty(BaseModel):
 
 
 class SemanticVersioning(BaseModel):
+    """Semantic versioning of the class or instance"""
+
     major: int
     minor: int
     patch: int
@@ -56,8 +59,7 @@ class SemanticVersioning(BaseModel):
         self._version = f"{self.major}.{self.minor}.{self.patch}"
 
     def __str__(self):
-        version = f"{self.major}.{self.minor}.{self.patch}"
-        return version
+        return self._version
 
 
 class Date(BaseModel):
@@ -100,38 +102,83 @@ class ModelUri(BaseModel):
         return f"{SERVER}/{self.namespace}/{self.version}/{self.uuid}/{self.name}"
 
 
-class Metadata(BaseModel):
-    """Or 'DataModel'.
+class PythonMetaclass(ModelMetaclass):
+    """Metaclass to implement class metadata inheritance in Python, required for but
+    not part of the data model.
+    ."""
 
-    An instance of this class is a metadata object, which is used to store the
+    def __new__(cls, name, bases, attrs):
+        if "class_meta" in attrs:
+            if attrs.get("class_meta") is not None:
+                # Get the parents of this class and set class_meta.parents to this list
+                attrs["class_meta"].parents = [
+                    parent.class_meta
+                    for parent in bases
+                    if hasattr(parent, "class_meta")
+                ]
+        return super().__new__(cls, name, bases, attrs)
+
+
+class Metadata(BaseModel, metaclass=PythonMetaclass):
+    """An instance of this class is a metadata object, which is used to store the
     properties of a class or instance of a class (a data model).
+
+    Resources
+    ---------
+    https://medium.com/@miguel.amezola/demystifying-python-metaclasses-understanding-
+    and-harnessing-the-power-of-custom-class-creation-d7dff7b68de8
+
     """
 
     name: str
     """The name of the class or instance"""
+    class_meta: ClassVar["ClassMetadata"] = None
+    """ This variable is a class variable, which holds the information about this
+    data model (type: ClassMetadata).This equals the jsondata slot of a OSW Category."""
+    meta: Optional["Metadata"] = None
+    """Metadata on the instance of this class or subclass ( Metadata / DataModel)."""
     description: Optional[str] = None
     """A description of the class or instance"""
     ontology_equivalent_iris: Optional[List[str]] = None
     """The IRIs of equivalent terms in other ontologies"""
-    meta: Optional["Metadata"] = None
-    """Metadata on the instance of this class or subclass ( Metadata / DataModel)."""
-    version: Optional[SemanticVersioning] = SemanticVersioning(
-        major=0, minor=0, patch=1
-    )
+    version: Optional[Union[str, "SemanticVersioning"]] = None
+    """The version of the class or instance"""
     namespace: Optional[str] = "aelcha"
     """Defines the context or domain for this metadata."""
     uuid: Optional[UUID] = Field(default_factory=uuid_module.uuid4)
     """A unique identifier."""
-    uri: Optional[Union[str, ModelUri]] = None
+    uri: Optional[Union[str, "ModelUri"]] = None
     """A unique identifier. If not provided, it will be generated from namespace,
     version, UUID and name. Have a look at SINTEFs DLite for inspiration."""
-    datetime: Optional[Union[Date, DateTime]] = Field(default_factory=DateTime.now)
+    datetime: Optional[Union["Date", "DateTime"]] = None
     """The date and time of the creation of the instance of this class."""
+    type: Optional[List[Type[BaseModel]]] = None
+    # todo: does not document the version, namespace, etc. of the class, yet :)
     model_config = ConfigDict(arbitrary_types_allowed=True)
+    """Configuration for the pydantic model. This is a class variable and can be
+    overridden in subclasses."""
 
     def __init__(self, **data):
         super().__init__(**data)
         # todo: rework
+        if self.type is None:
+            self.type = [self.__class__]
+        elif self.__class__ not in self.type:
+            self.type.append(self.__class__)
+        if isinstance(self.version, str):
+            if re.match(r"^\d+\.\d+\.\d+$", self.version) is None:
+                raise ValueError(
+                    f"Version {self.version} is not in the format 'major.minor.patch'! "
+                    "Please provide a valid version."
+                )
+            self.version = SemanticVersioning(
+                major=int(self.version.split(".")[0]),
+                minor=int(self.version.split(".")[1]),
+                patch=int(self.version.split(".")[2]),
+            )
+        if self.version is None:  # todo: implement automated versioning -> remote
+            #  server / git
+            self.version = SemanticVersioning(major=0, minor=0, patch=1)
         if self.uri is None:
             self.uri = ModelUri(
                 namespace=self.namespace,
@@ -139,11 +186,20 @@ class Metadata(BaseModel):
                 uuid=self.uuid,
                 name=self.name,
             )
-        if self.version is None:  # todo: implement automated versioning -> remote
-            #  server / git
-            self.version = SemanticVersioning(major=0, minor=0, patch=1)
+        if self.datetime is None:
+            self.datetime = DateTime.now()
         if self.meta is None:
-            if self.__class__ != Metadata:
+            # Avoid the infinite loop - all classes that are used within Metadata and
+            # are children of Metadata have to be listed here
+            if self.__class__ != (
+                Metadata
+                or ClassMetadata
+                or ModelUri
+                or SemanticVersioning
+                or Date
+                or DateTime
+                or SemanticProperty
+            ):
                 self.meta = Metadata(
                     name=self.name, version=self.version, namespace=self.namespace
                 )
@@ -160,7 +216,6 @@ class ClassMetadata(Metadata):
     * New class properties that are common to all classes can be added here
     * For properties that are specific to a class, a new child of MetaClass should be
       defined
-
     """
 
     parents: Optional[List[Type[T]]] = Field(default=[])
@@ -168,43 +223,25 @@ class ClassMetadata(Metadata):
     definition."""
 
 
-class PythonMetaclass(ModelMetaclass):
-    """Metaclass to implement class metadata inheritance in Python, required for but
-    not part of the data model.
-    ."""
+class DataModel(Metadata):
+    """An instance of this class is a metadata object, which is used to store the
+    properties of a class or instance of a class (a data model)."""
 
-    def __new__(cls, name, bases, attrs):
-        if "class_meta" in attrs:
-            # Get the parents of this class and set class_meta.parents to this list
-            attrs["class_meta"].parents = [
-                parent.class_meta for parent in bases if hasattr(parent, "class_meta")
-            ]
-        return super().__new__(cls, name, bases, attrs)
+    class_meta: ClassVar[ClassMetadata] = ClassMetadata(
+        name="DataModel",
+        version=SemanticVersioning(major=0, minor=0, patch=1),
+        namespace="aelcha",
+    )
 
 
-# metadata= ??
-class Entity(Metadata, metaclass=PythonMetaclass):
-    """Instances of this class are entities. This class is an Instance of MetaClass.
-
-    Resources
-    ---------
-    https://medium.com/@miguel.amezola/demystifying-python-metaclasses-understanding-and
-    -harnessing-the-power-of-custom-class-creation-d7dff7b68de8
-    """
+class Entity(DataModel):
+    """Instances of this class are entities. This class is an Instance of MetaClass."""
 
     class_meta: ClassVar[ClassMetadata] = ClassMetadata(
         name="Entity",
         version=SemanticVersioning(major=0, minor=0, patch=1),
         namespace="aelcha",
     )
-    """This variable is a class variable, which holds the information about this data
-    model (type: ClassMetadata). This equals the jsondata slot of a OSW Category."""
-    type: Optional[List[Type[BaseModel]]] = None
-    # todo: does not document the version, namespace, etc. of the class, yet :)
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        if self.type is None:
-            self.type = [self.__class__]
-        elif self.__class__ not in self.type:
-            self.type.append(self.__class__)
+
+Metadata.model_rebuild()
