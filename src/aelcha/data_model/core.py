@@ -134,23 +134,24 @@ class Metadata(BaseModel, metaclass=PythonMetaclass):
     """The name of the class or instance"""
     class_meta: ClassVar["ClassMetadata"] = None
     """ This variable is a class variable, which holds the information about this
-    data model (type: ClassMetadata).This equals the jsondata slot of a OSW Category."""
+    data model (type: ClassMetadata). This equals the jsondata slot of a OSW
+    Category."""
     meta: Optional["Metadata"] = None
     """Metadata on the instance of this class or subclass ( Metadata / DataModel)."""
     description: Optional[str] = None
     """A description of the class or instance"""
     ontology_equivalent_iris: Optional[List[str]] = None
     """The IRIs of equivalent terms in other ontologies"""
-    version: Optional[Union[str, "SemanticVersioning"]] = None
+    version: Optional[Union[str, SemanticVersioning]] = None
     """The version of the class or instance"""
     namespace: Optional[str] = "aelcha"
     """Defines the context or domain for this metadata."""
     uuid: Optional[UUID] = Field(default_factory=uuid_module.uuid4)
     """A unique identifier."""
-    uri: Optional[Union[str, "ModelUri"]] = None
+    uri: Optional[Union[str, ModelUri]] = None
     """A unique identifier. If not provided, it will be generated from namespace,
     version, UUID and name. Have a look at SINTEFs DLite for inspiration."""
-    datetime: Optional[Union["Date", "DateTime"]] = None
+    datetime: Optional[Union[Date, DateTime]] = None
     """The date and time of the creation of the instance of this class."""
     type: Optional[List[Type[BaseModel]]] = None
     # todo: does not document the version, namespace, etc. of the class, yet :)

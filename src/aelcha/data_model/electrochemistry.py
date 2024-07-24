@@ -1,18 +1,17 @@
 from enum import Enum
 
+from core import DataModel, DateTime
+from items import Device, PhysicalItem
 from typing_extensions import Dict, List, Optional
 
-from aelcha.data_model.core import DataModel, DateTime
-from aelcha.data_model.items import Device, PhysicalItem
 from aelcha.data_model.qaq_data import (
     Quality,
-    Quantity,
     QuantityAnnotation,
-    QuantityKindDimensionVector,
     TabularData,
     TabularDataMetadata,
-    UnitOfMeasure,
 )
+from aelcha.data_model.quantities import current, time, voltage
+from aelcha.data_model.units_of_measure import ampere, second, volt
 
 
 class BatteryCellFormFactor(Enum):
@@ -63,47 +62,6 @@ class BatteryPack(ElectrochemicalStorageDevice):
             self.cells = []
             for module in self.modules:
                 self.cells.extend(module.cells)
-
-
-second = UnitOfMeasure(
-    name="second",
-    description="SI base unit for time",
-    symbol="s",
-    dimension_vector=QuantityKindDimensionVector(time=1),
-)
-time = Quantity(
-    name="time",
-    data_type=float,
-    applicable_units=[second],
-    dimension_vector=QuantityKindDimensionVector(time=1),
-)
-volt = UnitOfMeasure(
-    name="volt",
-    symbol="V",
-    dimension_vector=QuantityKindDimensionVector(
-        time=-3, length=2, mass=1, electric_current=-1
-    ),
-)
-voltage = Quantity(
-    name="voltage",
-    data_type=float,
-    applicable_units=[volt],
-    dimension_vector=QuantityKindDimensionVector(
-        time=-3, length=2, mass=1, electric_current=-1
-    ),
-)
-ampere = UnitOfMeasure(
-    name="ampere",
-    description="SI base unit for electrical current",
-    symbol="A",
-    dimension_vector=QuantityKindDimensionVector(electric_current=1),
-)
-current = Quantity(
-    name="current",
-    data_type=float,
-    applicable_units=[ampere],
-    dimension_vector=QuantityKindDimensionVector(electric_current=1),
-)
 
 
 class BatteryCyclingMetadata(TabularDataMetadata):

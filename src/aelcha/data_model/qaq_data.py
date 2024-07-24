@@ -18,64 +18,15 @@ from aelcha.data_model.core import (
 from aelcha.data_model.items import Item
 
 
-class UnitPrefix(BaseModel):
-    name: str
-    description: str
+class UnitPrefix(DataModel):
+    # name will be required!
+    class_meta: ClassVar[ClassMetadata] = ClassMetadata(
+        name="UnitPrefix",
+        version=SemanticVersioning(major=0, minor=0, patch=1),
+        namespace="aelcha",
+    )
     symbol: str
-    uri: str
     conversion_factor: float
-
-
-class QuantityKindDimensionVector(DataModel):
-    """Dimensional exponents of the quantity kind. Defines the relation of a quantity
-    to the base quantities of a system of quantities as a product of factors
-    corresponding to the base quantities, omitting any numerical factor.
-    (According to VIM)"""
-
-    name: str = None
-    """Overwrite to save trouble, will be auto generated from the exponents."""
-    time: float = 0
-    """T dimensional exponent"""
-    length: float = 0
-    """L dimensional exponent"""
-    mass: float = 0
-    """M dimensional exponent"""
-    electric_current: float = 0
-    """I dimensional exponent"""
-    thermodynamic_temperature: float = 0
-    """Θ dimensional exponent"""
-    amount_of_substance: float = 0
-    """N dimensional exponent"""
-    luminous_intensity: float = 0
-    """J dimensional exponent"""
-
-    def __init__(self, **data):
-        name = data.get("name", None)
-        if name is None:
-            name = ""
-            for base_quantity, symbol in {
-                "time": "T",
-                "length": "L",
-                "mass": "M",
-                "electric_current": "I",
-                "thermodynamic_temperature": "Θ",
-                "amount_of_substance": "N",
-                "luminous_intensity": "J",
-            }.items():
-                exponent = data.get(base_quantity, 0)
-                if exponent != 0:
-                    sign = "" if exponent > 0 else "-"
-                    abs_val = abs(exponent)
-                    if exponent == 1:
-                        name = name + f"{symbol}"
-                    elif abs(exponent) == 0.5:
-                        name = name + f"{symbol}^{sign}1/2"
-                    else:
-                        name = name + f"{symbol}^{sign}{abs_val}"
-        super().__init__(name=name, **data)
-
-    def __str__(self):
-        return self.name
 
 
 class UnitPrefixOption(Enum):
@@ -256,7 +207,72 @@ class UnitPrefixOption(Enum):
     )
 
 
+class QuantityKindDimensionVector(DataModel):
+    """Dimensional exponents of the quantity kind. Defines the relation of a quantity
+    to the base quantities of a system of quantities as a product of factors
+    corresponding to the base quantities, omitting any numerical factor.
+    (According to VIM)"""
+
+    name: Optional[str] = None
+    """Overwrite to save trouble, will be auto generated from the exponents."""
+    class_meta: ClassVar[ClassMetadata] = ClassMetadata(
+        name="QuantityKindDimensionVector",
+        version=SemanticVersioning(major=0, minor=0, patch=1),
+        namespace="aelcha",
+    )
+    time: float = 0
+    """T dimensional exponent"""
+    length: float = 0
+    """L dimensional exponent"""
+    mass: float = 0
+    """M dimensional exponent"""
+    electric_current: float = 0
+    """I dimensional exponent"""
+    thermodynamic_temperature: float = 0
+    """Θ dimensional exponent"""
+    amount_of_substance: float = 0
+    """N dimensional exponent"""
+    luminous_intensity: float = 0
+    """J dimensional exponent"""
+
+    def __init__(self, **data):
+        name = data.get("name", None)
+        if name is None:
+            name = ""
+            for base_quantity, symbol in {
+                "time": "T",
+                "length": "L",
+                "mass": "M",
+                "electric_current": "I",
+                "thermodynamic_temperature": "Θ",
+                "amount_of_substance": "N",
+                "luminous_intensity": "J",
+            }.items():
+                exponent = data.get(base_quantity, 0)
+                if exponent != 0:
+                    sign = "" if exponent > 0 else "-"
+                    abs_val = abs(exponent)
+                    if exponent == 1:
+                        name = name + f"{symbol}"
+                    elif abs(exponent) == 0.5:
+                        name = name + f"{symbol}^{sign}1/2"
+                    else:
+                        name = name + f"{symbol}^{sign}{abs_val}"
+        super().__init__(name=name, **data)
+
+    def __str__(self):
+        return self.name
+
+
 class UnitOfMeasure(DataModel):
+    """Unit of measure. Can be prefixed or non-prefixed."""
+
+    # name will be required!
+    class_meta: ClassVar[ClassMetadata] = ClassMetadata(
+        name="UnitOfMeasure",
+        version=SemanticVersioning(major=0, minor=0, patch=1),
+        namespace="aelcha",
+    )
     symbol: str
     dimension_vector: Optional[QuantityKindDimensionVector] = None
     non_prefixed_unit: Optional["UnitOfMeasure"] = None
@@ -293,8 +309,19 @@ class UnitOfMeasure(DataModel):
 class Percentage(BaseModel):
     value: float = Field(..., ge=0, le=100)
 
+    def __str__(self):
+        return f"{self.value}%"
 
-class Uncertainty(BaseModel):
+
+class Uncertainty(DataModel):
+    """Uncertainty of a quantity. Can be symmetric, lower bound or upper bound."""
+
+    name: str = "Uncertainty"
+    class_meta: ClassVar[ClassMetadata] = ClassMetadata(
+        name="Uncertainty",
+        version=SemanticVersioning(major=0, minor=0, patch=1),
+        namespace="aelcha",
+    )
     symmetric: Optional[Union[float, Percentage, List[Union[float, Percentage]]]] = None
     lower_bound: Optional[Union[float, Percentage, List[Union[float, Percentage]]]] = (
         None
@@ -355,6 +382,7 @@ class Quality(DataModel):  # todo: discuss if parent should be entity
 
     """
 
+    # name will be required!
     data_type: TYPE_OPTION
     """Used for storage of the quality. E.g., when converting to json."""
     semantic_property: Optional[List[SemanticProperty]] = None
@@ -364,6 +392,7 @@ class Quality(DataModel):  # todo: discuss if parent should be entity
 class Quantity(Quality):
     """Quantity(Kind in QUDT) of Measure"""
 
+    # name will be required!
     applicable_units: List[UnitOfMeasure]
     dimension_vector: QuantityKindDimensionVector
     broader: Optional[List["Quantity"]] = None  # todo: list or single?
@@ -380,6 +409,7 @@ class Property(Quality):
 class QuantityAnnotation(DataModel):
     """Used to, e.g., describe the content of a column in a tabular data set."""
 
+    # name will be required!
     uncertainty: Optional[Union[float, Uncertainty]] = None
     """Uncertainty of the quantity - Should be a list of plus, minus, upper and lower
     bound (flat and percentage)"""
@@ -401,7 +431,7 @@ class QuantityAnnotation(DataModel):
             self.uncertainty = Uncertainty(symmetric=self.uncertainty)
 
 
-class QuantityValue(QuantityAnnotation):
+class QuantityStatement(QuantityAnnotation):
     """Synonymous to 'Quantity' - a physical quantity with a numerical value, an
     uncertainty and a unit."""
 
@@ -440,7 +470,14 @@ class Data(Item):
 
 
 class TabularDataMetadata(DataModel):
+    """Metadata of tabular data."""
+
     name: str = "TabularDataMetadata"
+    class_meta: ClassVar[ClassMetadata] = ClassMetadata(
+        name="TabularDataMetadata",
+        version=SemanticVersioning(major=0, minor=0, patch=1),
+        namespace="aelcha",
+    )
     columns: Dict[str, Quality]
     """A dict of qualities, with quality = description of the content of a column,
     which can be properties, quantities or other characteristics."""
