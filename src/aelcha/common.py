@@ -7,6 +7,7 @@ from typing_extensions import List, Optional, Union
 
 
 class QuantityStatement(BaseModel):
+    # todo: rework / replace
     numerical_value: float
     """Numerical value of the quantity."""
     uncertainty: Optional[float] = 0
@@ -30,35 +31,42 @@ class QuantityStatement(BaseModel):
 
 
 class Mass(QuantityStatement):
+    # todo: rework
     unit: str = "g"
     property: str = "Property:HasMass"
 
 
 class Voltage(QuantityStatement):
+    # todo: rework
     unit: str = "V"
     property: str = "Property:HasVoltage"
 
 
 class Charge(QuantityStatement):
+    # todo: rework
     unit: str = "mAh"
     property: str = "Property:HasCharge"
 
 
 class Capacity(Charge):
+    # todo: rework
     property: str = "Property:HasCapacity"
 
 
 class ChargeIncrement(Charge):
+    # todo: rework
     property: str = "Property:HasChargeIncrement"
 
 
 class VoltageIncrement(Voltage):
+    # todo: rework
     numerical_value: float = Field(default=2, le=10)
     unit: str = "mV"
     property: str = "Property:HasVoltageIncrement"
 
 
 class ChargePerVoltage(QuantityStatement):
+    # todo: rework
     unit: str = "mAh/V"
     property: str = "Property:HasChargePerVoltage"
 
@@ -68,14 +76,17 @@ class LimitOption(Enum):
 
 
 class VoltageLimit(Voltage):
+    # todo: rework
     property: str = "Property:HasVoltageLimit"
 
 
 class CapacityLimit(Capacity):
+    # todo: rework
     property: str = "Property:HasCapacityLimit"
 
 
 class ChargePerVoltageLimit(ChargePerVoltage):
+    # todo: rework
     property: str = "Property:HasChargePerVoltageLimit"
 
 

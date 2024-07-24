@@ -207,6 +207,16 @@ class UnitPrefixOption(Enum):
     )
 
 
+class SystemOfUnitsOfMeasure(DataModel):
+    pass
+    # todo: design
+
+
+class SystemOfQuantityKinds(DataModel):
+    pass
+    # todo: design
+
+
 class QuantityKindDimensionVector(DataModel):
     """Dimensional exponents of the quantity kind. Defines the relation of a quantity
     to the base quantities of a system of quantities as a product of factors
@@ -407,6 +417,7 @@ class Property(Quality):
 
 
 class QuantityAnnotation(DataModel):
+    # todo: could this be a characteristic?
     """Used to, e.g., describe the content of a column in a tabular data set."""
 
     # name will be required!
@@ -501,3 +512,5 @@ class TabularData(Data):
         arbitrary_types_allowed = True
 
     # todo: add validator for meta data
+    # todo: converter function to combine meta(columns) and data in one object
+    #  * row: List[BatteryCyclingCharacteristic] -> BatteryCyclingData
