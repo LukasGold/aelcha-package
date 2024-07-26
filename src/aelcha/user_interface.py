@@ -80,7 +80,7 @@ class Configuration(BaseModel):
     """Default export directory."""
     input_source_type: Optional[
         Union[MaccorPreprocessingOption, DigatronPreprocessingOption]
-    ] = MaccorPreprocessingOption.mims_export
+    ] = MaccorPreprocessingOption.mims_client1
     """Input source type."""
     decimal_separator: SeparatorOption = SeparatorOption.comma
     """Decimal separator in the input files."""
@@ -647,10 +647,12 @@ def read_file_selection(fp: Union[str, Path]) -> FileSelection:
             "input_source_type": DataTableSearch(
                 rc="Source type. Accepted values: "
                 "-11 (Maccor raw files), "
-                "10 (MIMS export), "
+                "10 (MIMS client v1 export), "
                 "11 (MaccorExport.exe v1), "
                 "12 (MaccorExport.exe v2), "
-                "20 (Digatron export)"
+                "13 (MIMS client v1 export), "
+                "14 (MIMS server v2 export), "
+                "20 (Digatron german client csv export)"
             ),
             "decimal_separator": DataTableSearch(
                 rc="Decimal separator set on the system. Usually the decimal separator "

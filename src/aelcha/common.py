@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from enum import Enum
+from enum import Enum, IntEnum
 
 import uncertainties as unc
 from pydantic import BaseModel, Field, PrivateAttr
@@ -108,22 +108,26 @@ class SeparatorOption(Enum):
     """Apostrophe separator."""
 
 
-class MaccorPreprocessingOption(Enum):
-    raw_data = -11  # historical
+class MaccorPreprocessingOption(IntEnum):
+    raw = -11  # historical
     """Raw data, must be read with the dll."""
-    mims_export = 10
+    mims_client1 = 10
     """MIMS export file. From MIMS Options>View Data from File>File>Save as text."""
-    maccor_export = 11
+    maccor_export1 = 11
     """Maccor export file. Output of the macor export exe v1."""
-    maccor_export_v2 = 12
+    maccor_export2 = 12
     """Maccor export file. Output of the macor export exe v2."""
+    mims_client2 = 13
+    """MIMS Client version 2 export file."""
+    mims_server2 = 14
+    """MIMS Server version 2 export file."""
 
 
-class DigatronPreprocessingOption(Enum):
+class DigatronPreprocessingOption(IntEnum):
     # raw_data = -21
     # """Raw data, must be retrieved from the database."""
-    digatron_export = 20
-    """Digatron export file."""
+    german_client_csv = 20
+    """Digatron (German) client csv export file."""
 
 
 class Sample(BaseModel):
