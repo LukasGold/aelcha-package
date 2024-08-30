@@ -650,7 +650,7 @@ def read_file_selection(fp: Union[str, Path]) -> FileSelection:
                 "10 (MIMS client v1 export), "
                 "11 (MaccorExport.exe v1), "
                 "12 (MaccorExport.exe v2), "
-                "13 (MIMS client v1 export), "
+                "13 (MIMS client v2 export), "
                 "14 (MIMS server v2 export), "
                 "20 (Digatron german client csv export)"
             ),
@@ -781,6 +781,18 @@ def read_file_selection(fp: Union[str, Path]) -> FileSelection:
         for key, dtl in cfg_map.mapping.items()
         if not np.isnan(cfg_table.at[dtl.row, dtl.col])
     }
+
+    def is_none_or_nan(val):
+        if isinstance(val, str):
+            if val.lower() == "nan":
+                return True
+            return False
+        if np.isnan(val):
+            return True
+        elif val is None:
+            return True
+        return False
+
     selection_rows = [
         SelectionRow(
             **{k: v for k, v in fs_table.loc[row].to_dict().items() if v is not None}

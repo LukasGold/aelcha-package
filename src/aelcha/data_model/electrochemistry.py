@@ -2,7 +2,7 @@ from enum import Enum
 
 from core import DataModel, DateTime
 from items import Device, PhysicalItem
-from typing_extensions import Dict, List, Optional
+from typing_extensions import Dict, List, Optional  # , Union
 
 from aelcha.data_model.qaq_data import (
     Quality,
@@ -10,8 +10,14 @@ from aelcha.data_model.qaq_data import (
     TabularData,
     TabularDataMetadata,
 )
-from aelcha.data_model.quantities import current, time, voltage
-from aelcha.data_model.units_of_measure import ampere, second, volt
+from aelcha.data_model.quantities import capacity, current, energy, time, voltage
+from aelcha.data_model.units_of_measure import (
+    ampere,
+    ampere_hour,
+    second,
+    volt,
+    watt_hour,
+)
 
 
 class BatteryCellFormFactor(Enum):
@@ -85,8 +91,8 @@ class BatteryCyclingMetadata(TabularDataMetadata):
         "index": QuantityAnnotation(
             name="index", description="The index of the measurement", data_type=int
         ),
-        "time": QuantityAnnotation(
-            name="time",
+        "test_time": QuantityAnnotation(
+            name="test_time",
             description="Elapsed time since the start of the measurement",
             data_type=float,
             unit=second,
@@ -106,11 +112,39 @@ class BatteryCyclingMetadata(TabularDataMetadata):
             unit=ampere,
             quantity_kind=current,
         ),
-        # capacity
-        # energy
-        # step
-        # cycle count
-        # mode
+        "capacity": QuantityAnnotation(
+            name="capacity",
+            description="Capacity of the battery",
+            data_type=float,
+            unit=ampere_hour,
+            quantity_kind=capacity,
+        ),
+        # charge capacity
+        # discharge capacity
+        "energy": QuantityAnnotation(
+            name="energy",
+            description="Energy of the battery",
+            data_type=float,
+            unit=watt_hour,
+            quantity_kind=energy,
+        ),
+        # charge energy
+        # discharge energy
+        "step": QuantityAnnotation(
+            name="step reference",
+            description="Step in the measurement procedure",
+            data_type=str,
+            unit=None,
+        ),
+        "cycle": QuantityAnnotation(
+            name="cycle",
+            description="Cycle count",
+            data_type=int,  # todo: discuss - allow full cycls only?
+            unit=None,
+        ),
+        "mode": QuantityAnnotation(
+            name="mode", description="Measurement mode", data_type=str, unit=None
+        ),  # todo: how to allow only certain values?
     }
 
 

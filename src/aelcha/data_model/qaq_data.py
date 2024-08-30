@@ -5,8 +5,8 @@ from enum import Enum
 import numpy as np
 import pandas as pd
 import uncertainties as unc
-from pydantic import BaseModel, Field, PrivateAttr, field_validator
-from typing_extensions import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
+from typing_extensions import Any, ClassVar, Dict, List, Optional, Self, Union
 
 from aelcha.data_model.core import (
     TYPE_OPTION,
@@ -235,33 +235,38 @@ class QuantityKindDimensionVector(DataModel):
     luminous_intensity: float = 0
     """J dimensional exponent"""
 
+    def string_representation(self, data: Dict[str, Any] = None) -> str:
+        if data is None:
+            data = self.model_dump()
+        string = ""
+        for base_quantity, symbol in {
+            "time": "T",
+            "length": "L",
+            "mass": "M",
+            "electric_current": "I",
+            "thermodynamic_temperature": "Θ",
+            "amount_of_substance": "N",
+            "luminous_intensity": "J",
+        }.items():
+            exponent = data.get(base_quantity, 0)
+            if exponent != 0:
+                sign = "" if exponent > 0 else "-"
+                abs_val = abs(exponent)
+                if exponent == 1:
+                    string = string + f"{symbol}"
+                elif abs(exponent) == 0.5:
+                    string = string + f"{symbol}^{sign}1/2"
+                else:
+                    string = string + f"{symbol}^{sign}{abs_val}"
+        return string
+
     def __init__(self, **data):
-        name = data.get("name", None)
-        if name is None:
-            name = ""
-            for base_quantity, symbol in {
-                "time": "T",
-                "length": "L",
-                "mass": "M",
-                "electric_current": "I",
-                "thermodynamic_temperature": "Θ",
-                "amount_of_substance": "N",
-                "luminous_intensity": "J",
-            }.items():
-                exponent = data.get(base_quantity, 0)
-                if exponent != 0:
-                    sign = "" if exponent > 0 else "-"
-                    abs_val = abs(exponent)
-                    if exponent == 1:
-                        name = name + f"{symbol}"
-                    elif abs(exponent) == 0.5:
-                        name = name + f"{symbol}^{sign}1/2"
-                    else:
-                        name = name + f"{symbol}^{sign}{abs_val}"
-        super().__init__(name=name, **data)
+        if data.get("name") is None:
+            data["name"] = self.string_representation(data)
+        super().__init__(**data)
 
     def __str__(self):
-        return self.name
+        return self.string_representation()
 
 
 class UnitOfMeasure(DataModel):
@@ -276,34 +281,39 @@ class UnitOfMeasure(DataModel):
     symbol: str
     dimension_vector: Optional[QuantityKindDimensionVector] = None
     non_prefixed_unit: Optional["UnitOfMeasure"] = None
-    prefix: Optional[UnitPrefixOption] = None
-    factor: Optional[float] = 1
-    # todo: get factor from prefix
+    prefix: Optional[UnitPrefixOption] = UnitPrefixOption.none
+    _conversion_factor: PrivateAttr(float) = 1
     # todo: ucum code
     # todo: derived from (missing here)
 
     def __init__(self, **data):
         super().__init__(**data)
-        if self.non_prefixed_unit is None:
-            if self.dimension_vector is None:
-                raise ValueError(
-                    "Either non_prefixed_unit or dimension_vector must be " "provided."
-                )
-        else:
+        if self.prefix is not None:
+            self._conversion_factor = self.prefix.value.conversion_factor
+        if self.non_prefixed_unit is not None:
             self.dimension_vector = self.non_prefixed_unit.dimension_vector
 
-    @field_validator("prefix")
-    def validate_prefix(cls, prefix, values):
-        if prefix is None:
-            return
-        if prefix == UnitPrefixOption.none:
-            if values["non_prefixed_unit"] is not None:
-                raise ValueError("Non-prefixed unit must be None if prefix is 'none'.")
-        else:
-            if values["non_prefixed_unit"] is None:
-                raise ValueError(
-                    "Non-prefixed unit must be provided if prefix is not " "'none'."
-                )
+    @model_validator(mode="after")
+    def check(self) -> Self:
+        if (
+            self.prefix is not (None or UnitPrefixOption.none)
+            and self.non_prefixed_unit is None
+        ):
+            raise ValueError(
+                "Non-prefixed unit must be provided if prefix is provided."
+            )
+        if self.non_prefixed_unit is not None and self.prefix is (
+            None or UnitPrefixOption.none
+        ):
+            raise ValueError(
+                "Prefix must be provided if non_prefixed_unit is provided."
+            )
+        if self.non_prefixed_unit is None and self.dimension_vector is None:
+            raise ValueError(
+                "Either non_prefixed_unit or dimension_vector must be provided. None "
+                "was given."
+            )
+        return self
 
 
 class Percentage(BaseModel):
@@ -398,6 +408,10 @@ class Quantity(Quality):
     broader: Optional[List["Quantity"]] = None  # todo: list or single?
     narrower: Optional[List["Quantity"]] = None
 
+    # todo: Include PINT representation and thereby PINT calculation
+    # todo: write validator that ensures that all applicable_units have the same
+    #  dimension_vector as the quantity
+
 
 class Property(Quality):
     """Property in a semantic sense. E.g. 'Works for' with range 'Organization'."""
@@ -431,6 +445,7 @@ class QuantityAnnotation(DataModel):
             self.uncertainty = Uncertainty(symmetric=self.uncertainty)
 
 
+# todo: think about integrating PINT and using products of scalar and unit of measure
 class QuantityStatement(QuantityAnnotation):
     """Synonymous to 'Quantity' - a physical quantity with a numerical value, an
     uncertainty and a unit."""
@@ -500,4 +515,44 @@ class TabularData(Data):
     class Config:
         arbitrary_types_allowed = True
 
-    # todo: add validator for meta data
+    @field_validator("meta")
+    def validate_meta(cls, meta, values):
+        data: Union[pd.DataFrame, np.ndarray] = values.get("data")
+        meta_columns = meta.columns
+        len_data_columns = None
+        if isinstance(data, pd.DataFrame):
+            len_data_columns = len(data.columns)
+        elif isinstance(data, np.ndarray):
+            len_data_columns = data.shape[1]
+        if len_data_columns != len(meta_columns):
+            raise ValueError(
+                f"Number of columns in data ({len(data.columns)}) does not match the "
+                f"number of columns in meta ({len(meta_columns)})"
+            )
+
+        return meta
+
+    @field_validator("data")
+    def validate_data(cls, data, values):
+        meta: TabularDataMetadata = values.get("meta")
+        meta_columns = meta.columns
+        if isinstance(data, pd.DataFrame):
+            data_columns = data.columns
+            missing_col_desc = set(meta_columns.keys()).difference(data_columns)
+            missing_data_cols = set(data_columns).difference(meta_columns.keys())
+            if missing_col_desc:
+                string = ", ".join([f"'{col}'" for col in missing_col_desc])
+                raise ValueError(
+                    f"Missing description in meta for columns in data: {string}"
+                )
+            if missing_data_cols:
+                string = ", ".join([f"'{col}'" for col in missing_data_cols])
+                raise ValueError(
+                    f"Column description in meta found, but no corresponding column in "
+                    f"data: {string}"
+                )
+
+    def __init__(self, **data):
+        super().__init__(**data)
+        if isinstance(self.data, np.ndarray):
+            self.data = pd.DataFrame(self.data, columns=list(self.meta.columns.keys()))
