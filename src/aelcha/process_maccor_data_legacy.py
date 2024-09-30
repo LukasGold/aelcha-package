@@ -1604,7 +1604,8 @@ def process_maccor_data(
     # -------------------------------------------------------------------------
     # %% Third chapter: differential voltage and capacity analysis
     # -------------------------------------------------------------------------
-
+    dv_min_increment *= 0.001  # minimum voltage increment for dQ/dV calculation
+    # passed as mV, converted to V !!!
     if plot_dq_dv == 1:
         vb_size = cb_size
 
