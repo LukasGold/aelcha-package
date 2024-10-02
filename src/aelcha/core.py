@@ -6,10 +6,10 @@
 # * returns the result
 
 
-import process_maccor_data_legacy as pmd
 from digatron_utility.read import DigatronDataFormat  # , read_digatron_data_file
 from maccor_utility.read import MaccorDataFormat  # , read_maccor_data_file
 
+import aelcha.process_maccor_data_legacy as pmd
 from aelcha.user_interface import (  # FileSelection,
     Configuration,
     LimitOption,

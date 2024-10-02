@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from bs4 import dammit
-from common import LimitOption
 from scipy.ndimage.filters import gaussian_filter1d
 from scipy.signal import medfilt, savgol_filter
 from typing_extensions import List, Sequence, Tuple, Union
+
+from aelcha.common import LimitOption
 
 
 def export_numpy_array_with_header(

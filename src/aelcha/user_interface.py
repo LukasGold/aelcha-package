@@ -4,7 +4,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from common import (
+from pydantic import BaseModel, Field, PrivateAttr, field_validator
+from typing_extensions import Dict, List, Optional, Union
+
+from aelcha.common import (
     Capacity,
     CapacityLimit,
     ChargeIncrement,
@@ -22,8 +25,6 @@ from common import (
     get_model_field_default_value,
     parse_cycles_to_plot,
 )
-from pydantic import BaseModel, Field, PrivateAttr, field_validator
-from typing_extensions import Dict, List, Optional, Union
 
 
 class PandasVersion:
