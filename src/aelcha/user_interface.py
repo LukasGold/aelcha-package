@@ -563,9 +563,14 @@ def is_none_or_nan(val):
     return False
 
 
-def read_file_selection(fp: Union[str, Path]) -> FileSelection:
+def read_file_selection(
+    fp: Union[str, Path], maccor_dll_fp: Union[str, Path] = None
+) -> FileSelection:
     if isinstance(fp, str):
         fp = Path(fp)
+    if maccor_dll_fp is not None:
+        if isinstance(maccor_dll_fp, str):
+            maccor_dll_fp = Path(maccor_dll_fp)
 
     pandas_version = PandasVersion()
     # python_version = sys.version_info
@@ -801,6 +806,12 @@ def read_file_selection(fp: Union[str, Path]) -> FileSelection:
         for key, dtl in cfg_map.mapping.items()
         if not is_none_or_nan(cfg_table.at[dtl.row, dtl.col])
     }
+    if maccor_dll_fp is not None:
+        if "maccor_dll_path" in cfg_data.keys():
+            if is_none_or_nan(cfg_data["maccor_dll_path"]):
+                cfg_data["maccor_dll_path"] = maccor_dll_fp
+        else:
+            cfg_data["maccor_dll_path"] = maccor_dll_fp
 
     selection_rows = [
         SelectionRow(
