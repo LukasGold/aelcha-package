@@ -1,11 +1,10 @@
 # core function:
 # * takes a filepath and params as input filepath = Part of the params object
-# * read the fle
+# * read the file
 # * converts the file to a standard format
 # * applies the analysis algorithm
 # * returns the result
 
-from pathlib import Path
 
 import process_maccor_data_legacy as pmd
 from digatron_utility.read import DigatronDataFormat  # , read_digatron_data_file
@@ -15,7 +14,6 @@ from aelcha.user_interface import (  # FileSelection,
     Configuration,
     LimitOption,
     SelectionRow,
-    read_file_selection,
 )
 
 
@@ -116,11 +114,3 @@ def process_file(row: SelectionRow, config: Configuration):
     #         frmt=DigatronDataFormat[config.input_source_type.name]
     #     )
     #     # Adapter
-
-
-if __name__ == "__main__":
-    file_path = Path(__file__).parents[2] / "examples" / "File_Selection.xlsx"
-    file_selection = read_file_selection(file_path)
-    for row in file_selection.selection_rows:
-        if row.process_file:
-            process_file(row, file_selection.configuration)
