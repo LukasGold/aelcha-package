@@ -966,7 +966,7 @@ def process_maccor_data(
 
     elif input_source_type == 20:
         digatron_data_obj = digatron_utility.read.read_digatron_data_file(file_path)
-        digatron_units = digatron_data_obj.data.meta["Units"]
+        digatron_units = digatron_data_obj.meta["Units"]
         digatron_df = digatron_data_obj.data.as_dataframe  # Tabular data
         digatron_df.rename(
             columns={
