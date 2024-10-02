@@ -1,7 +1,9 @@
 import os
+import re
 from pathlib import Path
 
 import digatron_utility
+import maccor_utility
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -694,6 +696,7 @@ def process_maccor_data(
     file_name: str,
     input_source_type: int,
     decimal_separator: str,
+    maccor_dll_path: Path,
     sample_name: str,
     active_material_mass: float,
     three_electrode_cell,
@@ -731,6 +734,10 @@ def process_maccor_data(
     if "." not in file_name:
         file_name += ".txt"
     elif ".csv" in file_name:
+        # It is a Digatron csv file
+        pass
+    elif re.match(pattern=r".*(\.[0]{1}\d{2})$", string=file_name) is not None:
+        # It is a Maccor raw file
         pass
     elif file_name.split(".")[-1].lower() != "txt":
         file_name += ".txt"
@@ -753,7 +760,30 @@ def process_maccor_data(
 
         print(f"Detected encoding: {encoding}")
 
-    if input_source_type == 10:  # or input_source_type == 13:
+    if input_source_type == -11:  # Maccor raw file
+        if maccor_dll_path is None:
+            raise ValueError("Maccor DLL path must be provided for raw files.")
+        if not maccor_dll_path.exists():
+            raise FileNotFoundError(f"Maccor DLL not found at {maccor_dll_path}")
+        maccor_data_obj = maccor_utility.read.read_maccor_data_file(
+            file_path=file_path,
+            frmt=maccor_utility.read.MaccorDataFormat.raw,
+            dll_path=maccor_dll_path,
+        )
+        maccor_df: pd.DataFrame = maccor_data_obj.data.as_dataframe
+        maccor_df.rename(
+            columns={
+                "Capacity": "Cap_Ah",
+                "Voltage": "Voltage_V",
+                "CycleNumProc": "Cycle_P",
+                "MainMode": "Md",
+                "Aux1": "AUX1_V",
+            },
+            inplace=True,
+        )
+        maccor_data = maccor_df
+
+    elif input_source_type == 10:  # or input_source_type == 13:
         # the file to import was exported from MIMS Client v1
         # enter number (indexing from 1) of the header containing column names
         # here

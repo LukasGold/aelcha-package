@@ -86,6 +86,8 @@ class Configuration(BaseModel):
     """Decimal separator in the input files."""
     thousands_separator: SeparatorOption = SeparatorOption.dot
     """Thousands separator in the input files."""
+    maccor_dll_path: Optional[Union[str, Path]] = None
+    """Path to the Maccor DLL file."""
     colormap: str = "gist_rainbow"
     """Colormap for plotting. Must be a valid matplotlib colormap. List of available
     colormaps: https://matplotlib.org/stable/gallery/color/colormap_reference.html"""
@@ -262,6 +264,8 @@ class Configuration(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         # Ensure correct types
+        if isinstance(self.maccor_dll_path, str):
+            self.maccor_dll_path = Path(self.maccor_dll_path)
         if isinstance(self.capacity_default, float):
             self.capacity = Capacity(numerical_value=self.capacity_default)
         if isinstance(self.active_material_mass_default, float):
@@ -547,6 +551,18 @@ class TableToSelection(BaseModel):
         arbitrary_types_allowed = True
 
 
+def is_none_or_nan(val):
+    if isinstance(val, str):
+        if val.lower() == "nan":
+            return True
+        return False
+    if np.isnan(val):
+        return True
+    elif val is None:
+        return True
+    return False
+
+
 def read_file_selection(fp: Union[str, Path]) -> FileSelection:
     if isinstance(fp, str):
         fp = Path(fp)
@@ -665,6 +681,10 @@ def read_file_selection(fp: Union[str, Path]) -> FileSelection:
                 rc="Thousands separator. Accepted values for this option are , and . "
                 "and ' "
             ),
+            "maccor_dll_path": DataTableSearch(
+                rc="Path to the MacReadDataFileLIB.dll, used for reading Maccor raw "
+                "files directly"
+            ),
             # Output data
             # -----------
             "export_dir_default": DataTableSearch(rc="Output directory"),
@@ -779,19 +799,8 @@ def read_file_selection(fp: Union[str, Path]) -> FileSelection:
     cfg_data = {
         key: cfg_table.at[dtl.row, dtl.col]
         for key, dtl in cfg_map.mapping.items()
-        if not np.isnan(cfg_table.at[dtl.row, dtl.col])
+        if not is_none_or_nan(cfg_table.at[dtl.row, dtl.col])
     }
-
-    def is_none_or_nan(val):
-        if isinstance(val, str):
-            if val.lower() == "nan":
-                return True
-            return False
-        if np.isnan(val):
-            return True
-        elif val is None:
-            return True
-        return False
 
     selection_rows = [
         SelectionRow(
