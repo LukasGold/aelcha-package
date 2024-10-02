@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import digatron_utility
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -724,15 +725,17 @@ def process_maccor_data(
     """
     Insert description here
     """
-    # %% Top level functions to be performed for every file, independently of
-    # selection in Excel
-
     # How many figure windows exist before evaluation --> only raise new ones
     # later on
     # figNumsIni = plt.get_fignums()
-
-    if file_name.split(".")[-1].lower() != "txt":
+    if "." not in file_name:
         file_name += ".txt"
+    elif ".csv" in file_name:
+        pass
+    elif file_name.split(".")[-1].lower() != "txt":
+        file_name += ".txt"
+    else:
+        pass
 
     file_path = Path(input_dir) / file_name
     print(f"Processing file {str(file_path)}")
@@ -838,8 +841,6 @@ def process_maccor_data(
         #        for letter in '-._ ':
         #            maccor_data.columns = maccor_data.columns.str.replace(letter, '_')
         #        maccor_data.columns = maccor_data.columns.str.replace('__', '_')
-
-        m_length = len(maccor_data)  # this is a check-up
 
     elif input_source_type == 11:
         # the file to import was exported from MaccorExport.exe v1
@@ -963,8 +964,52 @@ def process_maccor_data(
             decimal=decimal_separator,
         )
 
-        m_length = len(maccor_data)  # this is a check-up
+    elif input_source_type == 20:
+        digatron_data_obj = digatron_utility.read.read_digatron_data_file(file_path)
+        digatron_units = digatron_data_obj.data.meta["Units"]
+        digatron_df = digatron_data_obj.data.as_dataframe  # Tabular data
+        digatron_df.rename(
+            columns={
+                "Spannung": "Voltage_V",
+                "Zyklus": "Cycle_P",
+                "Status": "Md",
+            },
+            inplace=True,
+        )
+        digatron_df.replace(
+            {
+                "Md": {
+                    "PAU": "R",
+                    "LAD": "C",
+                    "ELA": "D",
+                }
+            },
+            inplace=True,
+        )
+        factor = 1
+        if digatron_units["AhAkku"] == "mAh":
+            factor = 1e-3
+        cap_ah = []
+        for row in digatron_df.index:
+            if digatron_df.at[row, "Md"] == "C":
+                cap_ah.append(digatron_df.at[row, "AhLad"] * factor)
+            elif digatron_df.at[row, "Md"] == "D":
+                cap_ah.append(digatron_df.at[row, "AhEla"] * factor)
+            else:
+                cap_ah.append(0)
+            # if digatron_df.at[row, "AhLad"] != 0:
+            #     cap_ah.append(digatron_df.at[row, "AhLad"])
+            # elif digatron_df.at[row, "AhEla"] != 0:
+            #     cap_ah.append(digatron_df.at[row, "AhEla"])
+            # else:
+            #     cap_ah.append(0)
+        digatron_df.insert(6, "Cap_Ah", cap_ah)
+        maccor_data = digatron_df
 
+    else:
+        raise ValueError("Unknown input type / format")
+
+    m_length = len(maccor_data)  # this is a check-up
     # List of unique entries in column 'Cycle_P'
     cycle_list = maccor_data.Cycle_P.unique()
 

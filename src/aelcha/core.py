@@ -7,8 +7,8 @@
 
 from pathlib import Path
 
-# from digatron_utility import DigatronDataFormat, read_digatron_data_file
 import process_maccor_data_legacy as pmd
+from digatron_utility.read import DigatronDataFormat  # , read_digatron_data_file
 from maccor_utility.read import MaccorDataFormat  # , read_maccor_data_file
 
 from aelcha.user_interface import (  # FileSelection,
@@ -20,7 +20,10 @@ from aelcha.user_interface import (  # FileSelection,
 
 
 def process_file(row: SelectionRow, config: Configuration):
-    if config.input_source_type.name in MaccorDataFormat.__members__:
+    if (
+        config.input_source_type.name in MaccorDataFormat.__members__
+        or config.input_source_type.name in DigatronDataFormat.__members__
+    ):
         # maccor_data = read_maccor_data_file(
         #     file_path=row._file_path,
         #     frmt=MaccorDataFormat[config.input_source_type.name]

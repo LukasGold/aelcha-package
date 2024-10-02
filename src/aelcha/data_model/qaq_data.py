@@ -1,12 +1,13 @@
 """Module on quantitative and qualitative (qaq) data (models)."""
 
 from enum import Enum
+from typing import Any
 
 import numpy as np
 import pandas as pd
 import uncertainties as unc
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
-from typing_extensions import Any, ClassVar, Dict, List, Optional, Self, Union
+from typing_extensions import ClassVar, Dict, List, Optional, Self, Union
 
 from aelcha.data_model.core import (
     TYPE_OPTION,
