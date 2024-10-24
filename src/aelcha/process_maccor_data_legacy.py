@@ -996,17 +996,20 @@ def process_maccor_data(
         )
 
     elif input_source_type == 20:
-        digatron_data_obj = digatron_utility.read.read_digatron_data_file(file_path)
-        digatron_units = digatron_data_obj.meta["Units"]
-        digatron_df = digatron_data_obj.data.as_dataframe  # Tabular data
-        digatron_df.rename(
-            columns={
-                "Spannung": "Voltage_V",
-                "Zyklus": "Cycle_P",
-                "Status": "Md",
-            },
-            inplace=True,
+        digatron_data_obj = digatron_utility.read.read_digatron_data_file(
+            file_path,
+            # remove_nan_rows=False
         )
+        digatron_units = digatron_data_obj.meta["Units"]
+        digatron_df: pd.DataFrame = digatron_data_obj.data.as_dataframe  # Tabular data
+        new_col_names = {
+            "Spannung": "Voltage_V",
+            "Zyklus": "Cycle_P",
+            "Status": "Md",
+        }
+        if "Z0" in digatron_df.columns:
+            new_col_names.update({"Zyklus": "Zyklus", "Z0": "Cycle_P"})
+        digatron_df.rename(columns=new_col_names, inplace=True)
         digatron_df.replace(
             {
                 "Md": {
@@ -1114,10 +1117,10 @@ def process_maccor_data(
     # counted 0
     cycle_based = np.zeros((num_cycle, 4))
 
-    # determine charge and discharge capacity
+    # Determine charge and discharge capacity
 
-    # loop over all rows starting with the second (index=1) one since we
-    # are always comparing the actual row with its predecessor
+    # Loop over all rows starting with the second (index=1) one since we
+    #  are always comparing the actual row with its predecessor
     for i in range(1, m_length):  # the last row has index m_length-1
         cycle = maccor_data.at[i - 1, "Cycle_P"]  # Cycle count
         i_cyc = np.where(cycle_list == cycle)[0][0]
@@ -1125,10 +1128,17 @@ def process_maccor_data(
             cycle_based[i_cyc, 0] = cycle  # set cycle count
             # set charge capacity
             cycle_based[i_cyc, 1] = maccor_data.at[i - 1, "Cap_Ah"]
+        elif i == m_length - 1 and maccor_data.at[i, "Md"] == "C":
+            cycle_based[i_cyc, 0] = cycle  # set cycle count
+            # set charge capacity
+            cycle_based[i_cyc, 1] = maccor_data.at[i, "Cap_Ah"]
         # elif = else if
         elif maccor_data.at[i, "Md"] != "D" and maccor_data.at[i - 1, "Md"] == "D":
             # set discharge capacity
-            cycle_based[i_cyc, 2] = maccor_data.Cap_Ah[i - 1]
+            cycle_based[i_cyc, 2] = maccor_data.at[i - 1, "Cap_Ah"]
+        elif i == m_length - 1 and maccor_data.at[i, "Md"] == "D":
+            # set discharge capacity
+            cycle_based[i_cyc, 2] = maccor_data.at[i, "Cap_Ah"]
 
     # Coulomb efficiency = DischCap/ChCap - catch exception of zero
     #  division by where argument
@@ -1136,7 +1146,7 @@ def process_maccor_data(
         cycle_based[:, 2], cycle_based[:, 1], where=cycle_based[:, 1] != 0
     )
     # Every row has to be considered, but when a row gets deleted the next
-    # row takes its index
+    #  row takes its index
     deletes = 0
     for row in range(0, len(cycle_based)):
         if (cycle_based[row - deletes, 1] == 0) and (
@@ -1146,8 +1156,8 @@ def process_maccor_data(
             cycle_based = np.delete(cycle_based, row - deletes, 0)
             deletes += 1
 
-    # update cycle_list according to entries with a non-zero capacity in
-    # cycle_based (which got deleted already):
+    # Update cycle_list according to entries with a non-zero capacity in
+    #  cycle_based (which got deleted already):
     cycle_list = np.unique(cycle_based[:, 0])
     ctp = convert_c2p(cycles_to_plot, cycle_list)
 
