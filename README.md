@@ -20,7 +20,7 @@ A longer description of your project goes here...
 
 ## Installation
 ```cmd
-pip install aelcha-package
+pip install aelcha
 ```
 
 ## Usage
